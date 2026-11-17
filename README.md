@@ -26,7 +26,8 @@ apps they already have and the wall just shows it.
 - **Chores with stars** for kids. Chores can repeat on chosen weekdays. Kids tick them on the wall;
   only a signed-in grown-up can add chores or spend stars.
 - **Weather** per day and now (Open-Meteo: free, no key, only your rounded town location is sent).
-- **Wall-friendly**: night mode 9pm–6am, back to today after 3 minutes untouched, an
+- **Wall-friendly**: night mode 9pm–6am; in the evening, once today is done, it folds to one line
+  that says what's first tomorrow; back to today after 3 minutes untouched, an
   "updated 2h ago" warning if refreshes start failing, and a daily reload to pick up deploys.
 - **Small delights** (all optional): a little animal wanders across now and then, a fun-fact card
   pops up every hour or two. Tap the weekday three times to summon a visitor, the clock three times
@@ -171,7 +172,7 @@ To lock the tablet out, change `KIOSK_KEY`.
 - **Dinner:** an all-day `Dinner: tacos` on the Family calendar, or tap "dinner?" on the wall.
 - **Chores:** from a phone or laptop (not the kiosk), tap a kid's tile, add a chore, and pick the
   days it repeats (none picked = every day). Tap the day line under a chore to change it.
-- **Working location** (Google's Office/Home setting) shows as a small 🏢/🏠 under the date.
+- **Working location** (Google's Office/Home setting) shows as 🏢/🏠 on that person's work line.
 
 ## Configuration
 
