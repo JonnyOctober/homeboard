@@ -11,11 +11,11 @@
 @font-face{font-family:'Fraunces';font-style:italic;font-weight:100 900;font-display:swap;src:url(fonts/fraunces-italic.woff2) format('woff2')}
 :root{
   --paper:#F7F1E7; --card:#FFFCF6; --ink:#2A251F; --mute:#6F6658; --soft:#EFE7DA; --btn:#FFFFFF;
-  --today:#FFF1C9; --shadow:rgba(60,40,10,.07); --tint-base:#FFFFFF; --tint:13%; --mix:60%;
+  --today:#FFF1C9; --shadow:rgba(60,40,10,.07); --tint-base:#FFFFFF; --tint:13%; --mix:50%;
 }
 body.night{
   --paper:#16120D; --card:#201B15; --ink:#F1E9DB; --mute:#9C9180; --soft:#2B251D; --btn:#2A241C;
-  --today:#3E3120; --shadow:rgba(0,0,0,.35); --tint-base:#201B15; --tint:24%; --mix:38%;
+  --today:#262019; --shadow:rgba(0,0,0,.35); --tint-base:#201B15; --tint:24%; --mix:38%;
 }
 *{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
 html{font-size:clamp(16px,2.6vw,34px)}
@@ -33,20 +33,28 @@ body.night #stale{color:#F08A6E}
 #range{font-size:.8rem;font-weight:500;color:var(--mute);white-space:nowrap}
 #wxnow{font-size:1.3rem;font-weight:500;line-height:1.1;white-space:nowrap;color:var(--mute)}
 #clock{font-size:3.1rem;font-weight:600;letter-spacing:-.03em;line-height:.95}
+#clock .ap{font-size:.38em;font-weight:600;letter-spacing:0;margin-left:.15em;color:var(--mute)}
 nav{display:flex;gap:.35rem;align-items:center;flex:none}
-nav button{height:3.2rem;min-width:3.2rem;padding:0 1rem;border-radius:999px;background:var(--btn);font-weight:600;font-size:1rem;box-shadow:0 .05rem .2rem var(--shadow)}
+nav button{height:3.2rem;min-width:3.2rem;padding:0 .8rem;border-radius:999px;background:var(--btn);font-weight:600;font-size:1rem;box-shadow:0 .05rem .2rem var(--shadow)}
 nav button:active{background:var(--ink);color:var(--paper)}
 
 main{flex:1;display:flex;flex-direction:column;gap:.35rem;padding:.15rem .6rem .3rem;overflow-y:auto;min-height:0}
 .day{flex:1 0 auto;min-height:4.6rem;display:grid;grid-template-columns:6rem 1fr 3rem;border-radius:1rem;background:var(--card);box-shadow:0 .05rem .25rem var(--shadow)}
 .day.past{opacity:.5}
 .day.today{background:var(--today);flex-grow:2.4}
+body.night .day.today{box-shadow:inset .35rem 0 0 #E2A400,0 .05rem .25rem var(--shadow)}
+/* evening, nothing left today: fold today to one line and point at tomorrow */
+.day.today.over{flex-grow:0;min-height:0}
+.day.today.over .evs>.ev{display:none}
+.tmr{display:none;align-self:center;font-size:1.3rem;font-weight:600;padding:.3rem 0}
+.tmr span{color:var(--mute);font-weight:500;margin-right:.4rem}
+.day.today.over .tmr{display:block}
 .day.far{min-height:3.4rem;flex-grow:.5}
 .day.far .num{font-size:2rem} .day.far .when{padding-top:.35rem}
 /* today: one event per line, times aligned, past dimmed, next one called out */
 .today .evs{flex-direction:column;flex-wrap:nowrap;gap:.3rem;padding-top:.6rem}
 .today .ev{font-size:1.45rem;width:fit-content}
-.today .ev .t{min-width:3.6em;font-size:1.05rem}
+.today .ev .t{min-width:2.9em;font-size:1.05rem}
 .today .ev.busy{font-size:1.15rem}
 .today .num{font-size:3.2rem}
 .ev.done{opacity:.38}
@@ -86,8 +94,8 @@ main.tight .today .ev{font-size:1.3rem}
 .who{flex:none;align-self:center;display:inline-grid;place-items:center;width:1.3em;height:1.3em;border-radius:50%;
   background:var(--c,#8a8a86);color:#fff;font-size:.72em;font-weight:700;line-height:1}
 .ev.allday .who{background:rgba(255,255,255,.92);color:var(--c,#8a8a86)}
-#key{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:.3rem .7rem;font-size:.8rem;font-weight:600;color:var(--mute)}
-.k{display:flex;align-items:center;gap:.3rem;white-space:nowrap;min-height:2.3rem;padding:0 .55rem 0 .35rem;margin:0 -.3rem;border-radius:999px;font:inherit;color:inherit;transition:opacity .2s}
+#key{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:.35rem .75rem;font-size:.95rem;font-weight:600;color:var(--mute)}
+.k{display:flex;align-items:center;gap:.3rem;white-space:nowrap;min-height:2.7rem;padding:0 .65rem 0 .4rem;margin:0 -.3rem;border-radius:999px;font:inherit;color:inherit;transition:opacity .2s}
 .filtering .k{opacity:.35}
 .filtering .k.sel{opacity:1;background:color-mix(in srgb,var(--c) var(--tint),var(--tint-base));color:color-mix(in srgb,var(--c) var(--mix),var(--ink));box-shadow:0 0 0 .12rem var(--c)}
 .k .x{font-size:.8em;margin-left:.15rem}
@@ -95,7 +103,10 @@ main.tight .today .ev{font-size:1.3rem}
 .ev .t{font-weight:500;opacity:.7;white-space:nowrap;font-size:.9rem}
 .ev .n{min-width:0;overflow-wrap:anywhere}
 .ev.allday{background:var(--c,#8a8a86);color:#fff}
+.ev.allday-p{font-weight:650;box-shadow:inset .28rem 0 0 var(--c,#8a8a86);padding-left:.75rem}
 .ev.busy{background:none;color:var(--mute);font-weight:500;font-size:.95rem;padding-left:.15rem}
+.ev.busy .who{opacity:.8}
+.ev.busy .wl{font-size:.95em}
 .ev.busy .t{opacity:1}
 .none{color:var(--mute);font-size:.85rem;padding:.2rem 0 0 .2rem;opacity:.6}
 .plus{padding:0;align-self:center;justify-self:center;width:2.2rem;height:2.2rem;border-radius:50%;background:var(--btn);color:var(--mute);
@@ -104,12 +115,12 @@ main.tight .today .ev{font-size:1.3rem}
 
 footer{display:flex;align-items:stretch;gap:.5rem;padding:.4rem .6rem .7rem}
 #kids{flex:1;display:flex;gap:.5rem;min-width:0}
-.kt{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:.7rem;min-height:4.4rem;padding:.5rem .9rem;border-radius:1rem;text-align:left;
+.kt{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:.55rem;min-height:4.4rem;padding:.5rem .8rem;border-radius:1rem;text-align:left;
   background:color-mix(in srgb,var(--c) var(--tint),var(--tint-base));box-shadow:0 .05rem .25rem var(--shadow)}
-.kt .who{font-size:1.6rem}
-.kt b{font-family:'Fraunces',Georgia,serif;font-size:1.7rem;font-weight:600;letter-spacing:-.02em;color:color-mix(in srgb,var(--c) var(--mix),var(--ink))}
-.kt .ks{margin-left:auto;text-align:right;line-height:1.15;white-space:nowrap}
-.kt .ks i{font-style:normal;font-size:1.5rem;font-weight:700}
+.kt .who{font-size:1.4rem}
+.kt b{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:'Fraunces',Georgia,serif;font-size:1.5rem;font-weight:600;letter-spacing:-.02em;color:color-mix(in srgb,var(--c) var(--mix),var(--ink))}
+.kt .ks{flex:none;margin-left:auto;padding-left:.3rem;text-align:right;line-height:1.15;white-space:nowrap}
+.kt .ks i{font-style:normal;font-size:1.35rem;font-weight:700}
 .kt .ks i::before{content:'★ ';color:#E2A400}
 .kt .ks small{display:block;font-size:.85rem;font-weight:600;color:var(--mute)}
 .kt.clear .ks small{color:#2F8F5E}
@@ -289,11 +300,11 @@ button.k{font:inherit;cursor:pointer;padding:.1rem .45rem .1rem .15rem;margin:-.
       // Working location (Office/Home) → a small "🏢 J" under the date instead of a chip.
       // Filter by person: theirs, plus whole-family events and meals (work blocks count as their owner's).
       var mine=function(e){return !state.only||e.meal||e.person===state.only||(e.people&&e.people.indexOf(state.only)>=0)||(e.person===sharedName()&&!e.busy)};
+      var locOf={};   // working location (Office/Home) rides on that person's work line
       var shown=day.events.filter(function(e){
         if(!mine(e))return false;
         if(!e.where)return true;
-        var x=el('div','loc',({home:'\uD83C\uDFE0',office:'\uD83C\uDFE2'}[e.where]||'\uD83D\uDCCD')+' ');
-        x.appendChild(el('b','',(e.person||'?').charAt(0)));x.title=(e.person||'')+': '+e.title;w.appendChild(x);return false;
+        locOf[e.person||'']=({home:'\uD83C\uDFE0',office:'\uD83C\uDFE2'}[e.where]||'\uD83D\uDCCD');return false;
       });
       var evs=el('div','evs');
       if(on('meals')&&i<2&&!shown.some(function(e){return e.meal})){
@@ -312,7 +323,8 @@ button.k{font:inherit;cursor:pointer;padding:.1rem .45rem .1rem .15rem;margin:-.
           busy[k].blocks.push([e.from,e.to]);
           return;
         }
-        var c=el('div','ev'+(e.allDay?' allday':''));tapEvent(c,e,lbl);
+        // solid fill only for whole-family all-day things; a person's all-day gets a tint and a bar
+        var c=el('div','ev'+(e.allDay?(e.person===sharedName()?' allday':' allday-p'):''));tapEvent(c,e,lbl);
         if(e.color)c.style.setProperty('--c',e.color);
         if(e.people&&e.people.length>1){
           // shared by several people: blend first and last colours, show every initial
@@ -334,10 +346,22 @@ button.k{font:inherit;cursor:pointer;padding:.1rem .45rem .1rem .15rem;margin:-.
         // Real blocks, so free gaps stay visible; only blocks < 30 min apart are joined.
         var bl=b.blocks.sort(function(x,y){return x[0]<y[0]?-1:1}),out=[];
         bl.forEach(function(x){var l=out[out.length-1];if(l&&mins(x[0])-mins(l[1])<30){if(x[1]>l[1])l[1]=x[1]}else out.push([x[0],x[1]])});
+        if(locOf[k])b.node.appendChild(el('span','wl',locOf[k]));
+        if(k&&isPerson(k)){var wb=el('span','who',k.charAt(0));wb.style.setProperty('--c',colorOf(k));b.node.appendChild(wb)}
         b.node.appendChild(el('span','t',out.length===1&&out[0][0]==='00:00'&&out[0][1]==='24:00'?'all day':out.map(function(x){return span(x[0],x[1])}).join(', ')));
         b.node.appendChild(el('span','n',k?k+' '+conf().busyLabel:'Busy'));
         if(isToday&&out.length&&mins(out[out.length-1][1])<=nowMin())b.node.classList.add('done');
       });
+      // Evening and nothing left today: fold today to one line and say what's first tomorrow.
+      if(isToday&&nowMin()>=17*60&&d.days[i+1]){
+        var left=shown.some(function(e){return !e.meal&&!e.allDay&&(e.busy?mins(e.to)>nowMin():(e.endMin!=null?e.endMin:(e.startMin||0)+60)>nowMin())});
+        if(!left){
+          var tm=d.days[i+1].events.filter(function(e){return mine(e)&&!e.busy&&!e.meal&&!e.where}),ft=tm.filter(function(e){return !e.allDay})[0]||tm[0];
+          var tl=el('div','tmr');tl.appendChild(el('span','',ft?(ft.allDay?'Tomorrow:':'First thing tomorrow:'):'Tomorrow'));
+          tl.appendChild(document.createTextNode(ft?(ft.time&&!ft.allDay?ft.time+' ':'')+ft.title:'nothing planned yet'));
+          evs.appendChild(tl);row.classList.add('over');
+        }
+      }
       row.appendChild(evs);
       // One-line fallback used only when the week doesn't fit: initials + "5 things, first 7:30a".
       var sl=el('div','sumline'),real=shown.filter(function(e){return !e.meal&&!e.busy}),seen={};
@@ -383,7 +407,7 @@ button.k{font:inherit;cursor:pointer;padding:.1rem .45rem .1rem .15rem;margin:-.
       var b=el('button','kt'+(k.chores.length&&!left?' clear':''));b.type='button';b.style.setProperty('--c',k.color);
       b.appendChild(el('span','who',k.name.charAt(0)));b.appendChild(el('b','',k.name));
       var ks=el('span','ks');ks.appendChild(el('i','',k.stars));
-      ks.appendChild(el('small','',!k.chores.length?'':left?left+' to do':'all done ✓'));b.appendChild(ks);
+      ks.appendChild(el('small','',!k.chores.length?'':left?left+' to do':'done ✓'));b.appendChild(ks);
       b.addEventListener('click',openChores);root.appendChild(b);
     });
   }
@@ -662,7 +686,7 @@ button.k{font:inherit;cursor:pointer;padding:.1rem .45rem .1rem .15rem;margin:-.
 
   function tick(){
     var n=new Date(),h=n.getHours(),m=n.getMinutes();
-    $('clock').textContent=(h%12||12)+':'+(m<10?'0':'')+m;
+    $('clock').textContent=(h%12||12)+':'+(m<10?'0':'')+m;$('clock').appendChild(el('span','ap',h<12?'am':'pm'));
     document.body.classList.toggle('night',h>=21||h<6);
     document.querySelector('meta[name=theme-color]').content=(h>=21||h<6)?'#16120D':'#F7F1E7';
   }
