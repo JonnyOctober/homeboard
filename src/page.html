@@ -100,12 +100,11 @@ main.tight .today .ev{font-size:1.3rem}
 .filtering .k.sel{opacity:1;background:color-mix(in srgb,var(--c) var(--tint),var(--tint-base));color:color-mix(in srgb,var(--c) var(--mix),var(--ink));box-shadow:0 0 0 .12rem var(--c)}
 .k .x{font-size:.8em;margin-left:.15rem}
 .k .who{font-size:.85em}
-.ev .t{font-weight:500;opacity:.7;white-space:nowrap;font-size:.9rem}
+.ev .t{font-weight:500;opacity:.9;white-space:nowrap;font-size:.9rem}
 .ev .n{min-width:0;overflow-wrap:anywhere}
 .ev.allday{background:var(--c,#8a8a86);color:#fff}
 .ev.allday-p{font-weight:650;box-shadow:inset .28rem 0 0 var(--c,#8a8a86);padding-left:.75rem}
 .ev.busy{background:none;color:var(--mute);font-weight:500;font-size:.95rem;padding-left:.15rem}
-.ev.busy .who{opacity:.8}
 .ev.busy .wl{font-size:.95em}
 .ev.busy .t{opacity:1}
 .none{color:var(--mute);font-size:.85rem;padding:.2rem 0 0 .2rem;opacity:.6}
@@ -357,7 +356,7 @@ button.k{font:inherit;cursor:pointer;padding:.1rem .45rem .1rem .15rem;margin:-.
         var left=shown.some(function(e){return !e.meal&&!e.allDay&&(e.busy?mins(e.to)>nowMin():(e.endMin!=null?e.endMin:(e.startMin||0)+60)>nowMin())});
         if(!left){
           var tm=d.days[i+1].events.filter(function(e){return mine(e)&&!e.busy&&!e.meal&&!e.where}),ft=tm.filter(function(e){return !e.allDay})[0]||tm[0];
-          var tl=el('div','tmr');tl.appendChild(el('span','',ft?(ft.allDay?'Tomorrow:':'First thing tomorrow:'):'Tomorrow'));
+          var tl=el('div','tmr');tl.appendChild(el('span','',ft?(ft.allDay?'Tomorrow:':'First thing tomorrow:'):'Tomorrow:'));
           tl.appendChild(document.createTextNode(ft?(ft.time&&!ft.allDay?ft.time+' ':'')+ft.title:'nothing planned yet'));
           evs.appendChild(tl);row.classList.add('over');
         }
