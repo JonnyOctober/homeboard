@@ -14,6 +14,11 @@ const tmp = path.join(root, 'test/.worker.tmp.mjs');
 fs.writeFileSync(tmp, src);
 // Pin the clock (Thu 12 Nov 2026, 3pm New York) so date-based tests don't drift with the real date.
 Date.now = () => Date.parse('2026-11-12T20:00:00Z');
+// The Worker logs each refused write; several tests trigger refusals on purpose. Keep the run quiet
+// for those, and still print anything unexpected.
+const EXPECTED_LOGS = [/not a secondary calendar; refusing to write/, /bad event id/];
+const realError = console.error;
+console.error = (...a) => { if (!EXPECTED_LOGS.some((r) => r.test(String(a[0]?.message ?? a[0])))) realError(...a); };
 const worker = (await import(pathToFileURL(tmp))).default;
 
 const FAMILY = 'c_abc@group.calendar.google.com';

@@ -154,10 +154,26 @@ Point the browser at `https://wall.yourdomain.com/kiosk/?k=<KIOSK_KEY>`. With Fu
 - If Fully won't start on boot, check that the screen lock is **None/Swipe** (a PIN blocks apps from
   starting before unlock), that Fully may **Display over other apps**, and, for a sideloaded APK on
   Android 13+, that you've allowed restricted settings for it.
-- Screen care: use Fully's **Scheduled Sleep/Wakeup** to turn the screen off overnight, and don't
-  run it at full brightness. LCDs don't burn in like OLEDs, but it saves power anyway.
+- Screen care: use Fully's **Scheduled Sleep/Wakeup** (Power settings) to turn the screen off
+  overnight, and don't run it at full brightness. LCDs don't burn in like OLEDs, but it saves power anyway.
+  The scheduler is a Fully **PLUS** feature: a one-time licence of about $11 per device, free to try
+  first. Everything else above works in the free version.
 
 To lock the tablet out, change `KIOSK_KEY`.
+
+### Updating
+
+Your settings live in `wrangler.toml`, which git never touches, so updating is:
+
+```sh
+git pull
+npm test
+npm run deploy
+```
+
+The tablet picks up the new version at its daily reload, or sooner if you restart Fully.
+New settings appear in `wrangler.example.toml` with sensible defaults, so an older `wrangler.toml`
+keeps working; copy over any new lines you want.
 
 ## Using it
 
