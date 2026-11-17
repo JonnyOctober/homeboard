@@ -57,7 +57,12 @@ function cfg(env) {
     // calendarId -> person (for colour + "Name: title")
     owners: parseJson(env.CALENDAR_PEOPLE, {}),
     hubPerson: env.HUB_PERSON || (adults[0] || {}).name || null,
-    kids: parseJson(env.CHORE_PEOPLE, null) || people.filter((p) => p.role === 'kid').map((p) => p.name),
+    // kids: whose name at the start of a title tags the event ("Max swim")
+    kids: people.filter((p) => p.role === 'kid').map((p) => p.name),
+    // who gets a chore tile: a person's own "chores" flag (default: kids yes, others no);
+    // CHORE_PEOPLE, a JSON list of names, still overrides for older configs
+    chorePeople: parseJson(env.CHORE_PEOPLE, null)
+      || people.filter((p) => !p.shared && (p.chores != null ? p.chores === true || p.chores === 'true' : p.role === 'kid')).map((p) => p.name),
     meal: env.MEAL_LABEL || 'Dinner',            // "Dinner: tacos" on the family calendar = that day's meal
     busyLabel: env.BUSY_LABEL || 'at work',      // "10a-5p  Alex at work"
     units: /^c/i.test(env.WEATHER_UNITS || '') ? 'celsius' : 'fahrenheit',
@@ -430,7 +435,7 @@ async function loadChores(env) {
   return { list: s.list || [], done: s.done || {}, stars: s.stars || {} };
 }
 function choreKids(env, c) {
-  return c.kids.map((n) => c.people.find((p) => p.name === n)).filter(Boolean);
+  return c.chorePeople.map((n) => c.people.find((p) => p.name === n && !p.shared)).filter(Boolean);
 }
 const weekday = (date) => { const p = date.split('-'); return new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])).getUTCDay(); };
 const dueOn = (ch, date) => !ch.days || !ch.days.length || ch.days.includes(weekday(date));

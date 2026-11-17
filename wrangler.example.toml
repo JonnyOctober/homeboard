@@ -41,7 +41,10 @@ BUSY_CALENDARS = '{"alex@work.example.com":"Alex"}'
 
 # ---- People ---------------------------------------------------------------
 # role: adult | kid | shared. Exactly one "shared" entry = the family calendar itself.
-# Kids get chore tiles. color = how the wall draws them; colorId = Google's event colour (1-11).
+# A kid's name at the start of a title tags the event to them ("Max swim").
+# chores: who gets a chore tile with stars. Kids default to true, everyone else to false,
+#   so add "chores":true to give a grown-up one, or "chores":false to leave a kid out.
+# color = how the wall draws them; colorId = Google's event colour (1-11).
 PEOPLE = '''[
   {"name":"Alex",   "color":"#3F67CF", "colorId":"9",  "role":"adult"},
   {"name":"Sam",    "color":"#CF4F7C", "colorId":"4",  "role":"adult"},

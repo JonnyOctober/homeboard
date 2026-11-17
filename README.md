@@ -23,7 +23,7 @@ apps they already have and the wall just shows it.
   titles never reach the wall.
 - **Dinner**: "Dinner: tacos" on the family calendar becomes that day's dinner line; an empty
   "dinner?" slot invites someone to plan it.
-- **Chores with stars** for kids. Chores can repeat on chosen weekdays. Kids tick them on the wall;
+- **Chores with stars**, for the kids by default (anyone can be given a tile). Chores can repeat on chosen weekdays. Kids tick them on the wall;
   only a signed-in grown-up can add chores or spend stars.
 - **Weather** per day and now (Open-Meteo: free, no key, only your rounded town location is sent).
 - **Wall-friendly**: night mode 9pm–6am; in the evening, once today is done, it folds to one line
@@ -183,7 +183,7 @@ Everything lives in `wrangler.toml` under `[vars]`; [`wrangler.example.toml`](wr
 | `HUB_EMAIL` | The Google account the wall signs in as. |
 | `HUB_PERSON` | Whose events the hub's own primary calendar holds. Defaults to the first adult. |
 | `FAMILY_CALENDAR_ID` | The only calendar the wall writes to. Must be a secondary `@group.calendar.google.com` calendar; the Worker refuses anything else. |
-| `PEOPLE` | JSON list of `{name, color, colorId, role}`. `role` is `adult`, `kid` or `shared` (exactly one `shared`: the family calendar). Kids get chore tiles. |
+| `PEOPLE` | JSON list of `{name, color, colorId, role, chores}`. `role` is `adult`, `kid` or `shared` (exactly one `shared`: the family calendar). `chores` gives that person a chore tile; it defaults to `true` for kids and `false` for everyone else. |
 | `CALENDAR_PEOPLE` | JSON `{calendarId: name}` for calendars shared to the hub. |
 | `BUSY_CALENDARS` | JSON `{calendarId: name}` for calendars shown only as busy blocks. |
 | `TIMEZONE` | IANA zone, e.g. `Europe/London`. |

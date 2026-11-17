@@ -307,4 +307,15 @@ assert.equal(JSON.parse(calls.find((c) => c.method === 'POST' && c.url.includes(
 calls.length = 0;
 await cget('/api/week?start=2026-11-08', { WEATHER_LAT: '51.5', WEATHER_LON: '-0.1', WEATHER_UNITS: 'celsius' });
 assert.ok(calls.find((c) => c.url.startsWith('https://api.open-meteo.com/')).url.includes('temperature_unit=celsius'));
+// chores per person: kids by default, a grown-up can opt in, a kid can opt out
+const CP = JSON.stringify([
+  { name: 'Pat', color: '#111111', colorId: '1', role: 'adult', chores: true },
+  { name: 'Home', color: '#222222', colorId: '2', role: 'shared', chores: true },   // shared never gets a tile
+  { name: 'Kit', color: '#333333', colorId: '3', role: 'kid' },
+  { name: 'Lou', color: '#444444', colorId: '4', role: 'kid', chores: false }]);
+assert.deepEqual((await (await cget('/api/chores', { PEOPLE: CP })).json()).kids.map((k) => k.name), ['Pat', 'Kit']);
+// CHORE_PEOPLE still overrides, and no longer changes whose name tags an event
+assert.deepEqual((await (await cget('/api/chores', { CHORE_PEOPLE: '["Ruby","Sam"]' })).json()).kids.map((k) => k.name), ['Ruby', 'Sam']);
+cw = await (await cget('/api/week?start=2026-11-08', { CHORE_PEOPLE: '["Sam"]' })).json();
+assert.equal(cw.days.find((d) => d.date === '2026-11-12').events.find((e) => e.title === 'taekwondo').person, 'Max');
 console.log('config tests passed');
