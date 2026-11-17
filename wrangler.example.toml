@@ -1,0 +1,75 @@
+# homeboard configuration.
+# Copy this file to wrangler.toml (which is gitignored) and fill it in.
+# Nothing here is a secret; the three secrets go in with `npx wrangler secret put` (see README).
+
+name = "homeboard"
+main = "src/worker.js"
+compatibility_date = "2026-10-01"
+
+# page.html is imported as a string; the fonts as raw bytes
+rules = [
+  { type = "Text", globs = ["**/*.html"], fallthrough = true },
+  { type = "Data", globs = ["**/*.woff2"], fallthrough = true },
+]
+
+# The hostname your wall lives at. The domain must be a zone on your Cloudflare account.
+routes = [{ pattern = "wall.example.com", custom_domain = true }]
+
+# npx wrangler kv namespace create homeboard   (then paste the id here)
+[[kv_namespaces]]
+binding = "KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+[vars]
+# ---- Google ---------------------------------------------------------------
+# The "hub" Google account the wall signs in as. It reads every calendar in this
+# account's list, so share each person's calendar to it.
+HUB_EMAIL = "our.family.wall@gmail.com"
+# Whose events the hub's own primary calendar holds (optional).
+HUB_PERSON = "Alex"
+
+# The ONLY calendar the app can write to: a secondary calendar on the hub account
+# (Google Calendar > Settings > the calendar > "Integrate calendar" > Calendar ID).
+FAMILY_CALENDAR_ID = "REPLACE_WITH_ID@group.calendar.google.com"
+
+# Calendars shared to the hub, and whose they are (sets colour + initial).
+CALENDAR_PEOPLE = '{"alex@example.com":"Alex","sam@example.com":"Sam"}'
+
+# Calendars shown only as "<name> at work" blocks. Read with Google's free/busy API,
+# so titles and details never reach the wall. Good for work calendars.
+BUSY_CALENDARS = '{"alex@work.example.com":"Alex"}'
+
+# ---- People ---------------------------------------------------------------
+# role: adult | kid | shared. Exactly one "shared" entry = the family calendar itself.
+# Kids get chore tiles. color = how the wall draws them; colorId = Google's event colour (1-11).
+PEOPLE = '''[
+  {"name":"Alex",   "color":"#3F67CF", "colorId":"9",  "role":"adult"},
+  {"name":"Sam",    "color":"#CF4F7C", "colorId":"4",  "role":"adult"},
+  {"name":"Family", "color":"#2F8F5E", "colorId":"10", "role":"shared"},
+  {"name":"Max",    "color":"#D9762B", "colorId":"6",  "role":"kid"},
+  {"name":"Ruby",   "color":"#8A55C9", "colorId":"3",  "role":"kid"}
+]'''
+
+# ---- Place & labels --------------------------------------------------------
+TIMEZONE = "America/New_York"
+TITLE = "Family"                 # browser tab title
+MEAL_LABEL = "Dinner"            # "Dinner: tacos" on the family calendar = that day's meal
+BUSY_LABEL = "at work"           # "10a-5p  Alex at work"
+
+# Weather (Open-Meteo: free, no key). Round to your town; leave both blank to turn weather off.
+WEATHER_LAT = "40.71"
+WEATHER_LON = "-74.01"
+WEATHER_UNITS = "fahrenheit"     # or "celsius"
+
+# ---- Features (true/false) -------------------------------------------------
+CHORES = "true"                  # kid chore tiles with stars
+MEALS = "true"                   # a dinner line on each day
+VISITORS = "true"                # now and then a little animal wanders across the screen
+FACTS = "fun"                    # fact card now and then: fun | pokemon | off
+
+# ---- Cloudflare Access ------------------------------------------------------
+# Zero Trust > Access > Applications > your wall app (see README step 5).
+ACCESS_TEAM_DOMAIN = "your-team.cloudflareaccess.com"
+ACCESS_AUD = "REPLACE_WITH_APPLICATION_AUDIENCE_TAG"
+
+# Secrets (npx wrangler secret put NAME): GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, KIOSK_KEY

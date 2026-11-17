@@ -1,0 +1,12 @@
+{
+  "name": "homeboard",
+  "private": true,
+  "description": "A family wall calendar on a Cloudflare Worker, backed by Google Calendar.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "node test/run.mjs",
+    "dev": "npx -y wrangler@4 dev",
+    "deploy": "npx -y wrangler@4 deploy"
+  }
+}

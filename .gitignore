@@ -1,0 +1,7 @@
+# your real config (copy wrangler.example.toml) and local secrets
+wrangler.toml
+.dev.vars
+.wrangler/
+node_modules/
+test/.worker.tmp.mjs
+.DS_Store
