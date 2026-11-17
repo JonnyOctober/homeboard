@@ -31,10 +31,10 @@ const FACT_PACKS = { fun: FUN_FACTS, pokemon: POKEMON_FACTS };
 const flag = (v, dflt) => (v == null || v === '' ? dflt : !/^(0|false|off|no)$/i.test(String(v).trim()));
 
 const enc = new TextEncoder();
-const json = (data, status = 200) =>
+const json = (data, status = 200, extra = {}) =>
   new Response(JSON.stringify(data), {
     status,
-    headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
+    headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store', ...extra },
   });
 const parseJson = (s, fallback) => {
   try { return s ? JSON.parse(s) : fallback; } catch { return fallback; }
@@ -429,6 +429,7 @@ async function deleteEvent(env, request) {
 // days = weekdays the chore is due (0=Sun..6=Sat); missing or empty means every day.
 // The wall (kiosk) may only tick/untick; adding, removing and spending stars need a
 // signed-in parent (Cloudflare Access), so the kids can't award themselves stars.
+// Optional PARENT_PIN: a grown-up can unlock that on the wall itself for a few minutes.
 const CHORES_KEY = 'chores';
 async function loadChores(env) {
   const s = parseJson(await env.KV.get(CHORES_KEY), {});
@@ -445,13 +446,17 @@ function cleanDays(v) {
   const d = [...new Set(v.map(Number))].filter((n) => Number.isInteger(n) && n >= 0 && n <= 6).sort();
   return d.length === 7 ? [] : d;   // all seven = every day
 }
-function choresView(env, s, kiosk) {
+// mode: { kiosk, parent }. A kiosk unlocked with the PIN counts as a parent.
+function choresView(env, s, mode) {
   const c = cfg(env);
   const today = tzParts(Date.now(), c.tz).date;
   const done = s.done[today] || {};
   const row = (x) => ({ id: x.id, title: x.title, days: x.days || [], done: !!done[x.id] });
+  const kiosk = !mode.parent;
   return json({
-    date: today, canEdit: !kiosk,
+    date: today, canEdit: mode.parent,
+    pin: mode.kiosk && pinSet(env),               // the wall can offer "Grown-ups" unlock
+    unlocked: mode.kiosk && mode.parent,          // ...or show "Lock" while unlocked
     kids: choreKids(env, c).map((k) => {
       const mine = s.list.filter((x) => x.kid === k.name);
       const out = { name: k.name, color: k.color, stars: s.stars[k.name] || 0,
@@ -461,9 +466,10 @@ function choresView(env, s, kiosk) {
     }),
   });
 }
-async function chores(env, request, kiosk) {
+async function chores(env, request, mode) {
   const s = await loadChores(env);
-  if (request.method === 'GET') return choresView(env, s, kiosk);
+  const kiosk = !mode.parent;
+  if (request.method === 'GET') return choresView(env, s, mode);
   const c = cfg(env);
   const today = tzParts(Date.now(), c.tz).date;
   const b = await request.json().catch(() => null);
@@ -477,7 +483,7 @@ async function chores(env, request, kiosk) {
     if (d[ch.id]) { delete d[ch.id]; s.stars[ch.kid] = Math.max(0, (s.stars[ch.kid] || 0) - 1); }
     else { d[ch.id] = true; s.stars[ch.kid] = (s.stars[ch.kid] || 0) + 1; }
   } else if (kiosk) {
-    return json({ error: 'change chores from a phone' }, 403);
+    return json({ error: pinSet(env) ? 'unlock with the grown-up PIN first' : 'change chores from a phone' }, 403);
   } else if (b.action === 'add') {
     const title = String(b.title || '').replace(/\s+/g, ' ').trim().slice(0, 60);
     if (!kids.includes(b.kid)) return json({ error: 'pick a kid' }, 400);
@@ -506,7 +512,37 @@ async function chores(env, request, kiosk) {
   const keep = addDays(today, -14);  // ticks reset daily; stars are the running total
   for (const d of Object.keys(s.done)) if (d < keep) delete s.done[d];
   await env.KV.put(CHORES_KEY, JSON.stringify(s));
-  return choresView(env, s, kiosk);
+  return choresView(env, s, mode);
+}
+
+// ---------- grown-up PIN on the wall (optional) ----------
+// PARENT_PIN is a secret, 4-12 digits. Unlocking sets a 5-minute cookie on /kiosk signed with the
+// PIN and the kiosk key. Five wrong tries lock the keypad for 15 minutes.
+const PIN_TTL = 5 * 60, PIN_TRIES = 5, PIN_LOCKOUT = 15 * 60, PIN_FAILS_KEY = 'pin_fails';
+const pinSet = (env) => /^\d{4,12}$/.test(env.PARENT_PIN || '');
+const pinSig = (env, exp) => sha256hex('fwp1:' + exp + ':' + env.PARENT_PIN + ':' + env.KIOSK_KEY);
+async function pinUnlocked(request, env) {
+  if (!pinSet(env)) return false;
+  const m = (request.headers.get('cookie') || '').match(/fw_parent=(\d+)\.([a-f0-9]{64})/);
+  if (!m || +m[1] * 1000 <= Date.now()) return false;
+  return m[2] === (await pinSig(env, m[1]));
+}
+async function unlock(env, request) {
+  if (!pinSet(env)) return json({ error: 'no grown-up PIN is set' }, 404);
+  const now = Math.floor(Date.now() / 1000);
+  const f = parseJson(await env.KV.get(PIN_FAILS_KEY), { n: 0, until: 0 });
+  if (f.until > now) return json({ error: 'too many tries; wait ' + Math.ceil((f.until - now) / 60) + ' min' }, 429);
+  const b = await request.json().catch(() => ({}));
+  const pin = String((b && b.pin) || '');
+  if ((await sha256hex('pin:' + pin)) !== (await sha256hex('pin:' + env.PARENT_PIN))) {
+    const n = (f.until && f.until <= now ? 0 : f.n) + 1;
+    await env.KV.put(PIN_FAILS_KEY, JSON.stringify(n >= PIN_TRIES ? { n: 0, until: now + PIN_LOCKOUT } : { n, until: 0 }));
+    return json({ error: n >= PIN_TRIES ? 'too many tries; wait 15 min' : 'wrong PIN' }, 403);
+  }
+  if (f.n || f.until) await env.KV.put(PIN_FAILS_KEY, JSON.stringify({ n: 0, until: 0 }));
+  const exp = now + PIN_TTL;
+  return json({ ok: true, until: exp * 1000 }, 200,
+    { 'set-cookie': `fw_parent=${exp}.${await pinSig(env, exp)}; Path=/kiosk; HttpOnly; Secure; SameSite=Strict; Max-Age=${PIN_TTL}` });
 }
 
 // ---------- one-time Google connect ----------
@@ -620,7 +656,12 @@ export default {
       if (path === '/api/events' && request.method === 'DELETE') return await deleteEvent(env, request);
       if (path === '/api/chores' && (request.method === 'GET' || request.method === 'POST')) {
         if (!cfg(env).features.chores) return json({ error: 'chores are turned off' }, 404);
-        return await chores(env, request, kiosk);
+        return await chores(env, request, { kiosk, parent: !kiosk || (await pinUnlocked(request, env)) });
+      }
+      // Grown-up PIN: only meaningful on the kiosk (signed-in phones are already grown-ups).
+      if (path === '/api/unlock' && request.method === 'POST' && kiosk) return await unlock(env, request);
+      if (path === '/api/lock' && request.method === 'POST' && kiosk) {
+        return json({ ok: true }, 200, { 'set-cookie': 'fw_parent=; Path=/kiosk; HttpOnly; Secure; SameSite=Strict; Max-Age=0' });
       }
       if (path === '/api/facts' && request.method === 'GET') {
         const pack = FACT_PACKS[cfg(env).features.facts];

@@ -53,7 +53,7 @@ apps they already have and the wall just shows it.
 - **Grown-ups** sign in through Cloudflare Access (an email code) on any device.
 - **The tablet** can't do email codes, so it uses a long secret in its start URL once; that sets a
   cookie good for the `/kiosk/` path only. The kiosk can do everything a grown-up can except manage
-  chores and stars.
+  chores and stars, unless you set a grown-up PIN (below).
 - **Fails closed**: no valid Access token and no kiosk key means 403, for every path.
 
 ## What you need
@@ -118,6 +118,7 @@ Signed in as the hub, at [console.cloud.google.com](https://console.cloud.google
    npx wrangler secret put GOOGLE_CLIENT_SECRET
    openssl rand -hex 24                 # save this in your password manager: it's the kiosk key
    npx wrangler secret put KIOSK_KEY    # 24+ characters, or every kiosk request is refused
+   npx wrangler secret put PARENT_PIN   # optional: 4-12 digits to manage chores on the wall itself
    ```
 
 ### 5. Cloudflare Access (who can open it)
@@ -186,8 +187,11 @@ keeps working; copy over any new lines you want.
   as that kid's, and one starting with several names ("Max and Ruby TKD", "Ruby, Max: soccer") as
   all of theirs.
 - **Dinner:** an all-day `Dinner: tacos` on the Family calendar, or tap "dinner?" on the wall.
-- **Chores:** from a phone or laptop (not the kiosk), tap a kid's tile, add a chore, and pick the
+- **Chores:** from a phone or laptop, tap a kid's tile, add a chore, and pick the
   days it repeats (none picked = every day). Tap the day line under a chore to change it.
+  On the wall itself, kids can only tick chores off. If you set `PARENT_PIN`, a **🔒 Grown-ups**
+  button under the chores unlocks adding chores and spending stars for 5 minutes (it relocks when you
+  close the panel). Five wrong PINs lock the keypad for 15 minutes. Cover the keypad from small eyes.
 - **Working location** (Google's Office/Home setting) shows as 🏢/🏠 on that person's work line.
 
 ## Configuration
@@ -209,7 +213,8 @@ Everything lives in `wrangler.toml` under `[vars]`; [`wrangler.example.toml`](wr
 | `FACTS` | `fun` (default), `pokemon`, or `off`. |
 | `ACCESS_TEAM_DOMAIN`, `ACCESS_AUD` | From Cloudflare Access. |
 
-Secrets: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `KIOSK_KEY`.
+Secrets: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `KIOSK_KEY`, and optionally `PARENT_PIN` (4-12 digits;
+unset means chores can only be managed from a signed-in phone or laptop).
 
 ### Making it yours
 

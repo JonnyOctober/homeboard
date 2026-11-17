@@ -272,6 +272,40 @@ assert.equal((await kpost({ action: 'stars', kid: 'Max', delta: 10 })).status, 4
 assert.equal((await kpost({ action: 'remove', id: kc.kids[0].chores[0].id })).status, 403);
 assert.equal((await kpost({ action: 'days', id: kc.kids[0].chores[0].id, days: [1] })).status, 403);
 assert.equal(kc.kids[0].later, undefined);   // the wall only ever sees today's chores
+assert.equal(kc.pin, false);                  // no PARENT_PIN: no keypad offered
+// grown-up PIN on the wall
+const kreq = (p, e, b, extra = '') => worker.fetch(new Request('https://wall.example.com/kiosk' + p,
+  { method: b ? 'POST' : 'GET', headers: { cookie: cookie + extra }, body: b ? JSON.stringify(b) : undefined }), e);
+assert.equal((await kreq('/api/unlock', locked, { pin: '1234' })).status, 404);      // unset = feature off
+assert.equal((await kreq('/api/unlock', { ...locked, PARENT_PIN: '12' }, { pin: '12' })).status, 404);   // too short = off
+const pe = { ...locked, PARENT_PIN: '482913' };
+kc = await (await kreq('/api/chores', pe)).json();
+assert.equal(kc.pin, true); assert.equal(kc.canEdit, false); assert.equal(kc.unlocked, false);
+assert.equal((await kreq('/api/unlock', pe, { pin: '000000' })).status, 403);
+r = await kreq('/api/unlock', pe, { pin: '482913' });
+assert.equal(r.status, 200);
+const pinCookie = r.headers.get('set-cookie');
+assert.match(pinCookie, /Path=\/kiosk; HttpOnly; Secure; SameSite=Strict; Max-Age=300/);
+const parent = '; ' + pinCookie.split(';')[0];
+kc = await (await kreq('/api/chores', pe, null, parent)).json();
+assert.equal(kc.canEdit, true); assert.equal(kc.unlocked, true); assert.ok(Array.isArray(kc.kids[0].later));
+assert.equal((await kreq('/api/chores', pe, { action: 'stars', kid: 'Max', delta: 1 }, parent)).status, 200);
+assert.equal((await kreq('/api/chores', pe, { action: 'stars', kid: 'Max', delta: 1 })).status, 403);        // without the cookie
+assert.equal((await kreq('/api/chores', { ...pe, PARENT_PIN: '111111' }, { action: 'stars', kid: 'Max', delta: 1 }, parent)).status, 403);  // PIN changed = old unlocks die
+const [exp] = parent.slice(12).split('.');
+assert.equal((await kreq('/api/chores', pe, { action: 'stars', kid: 'Max', delta: 1 }, '; fw_parent=' + (+exp + 999) + '.' + parent.split('.')[1])).status, 403);  // forged expiry
+const realNow = Date.now;
+Date.now = () => realNow() + 301000;   // 5 minutes later it has locked itself
+assert.equal((await kreq('/api/chores', pe, { action: 'stars', kid: 'Max', delta: 1 }, parent)).status, 403);
+Date.now = realNow;
+assert.match((await kreq('/api/lock', pe, {})).headers.get('set-cookie'), /fw_parent=; .*Max-Age=0/);
+assert.equal((await lget('/api/unlock', {})).status, 403);   // not reachable outside the kiosk
+// five wrong tries lock the keypad, even for the right PIN, for 15 minutes
+for (let i = 0; i < 5; i++) assert.equal((await kreq('/api/unlock', pe, { pin: '9' + i })).status, 403);
+assert.equal((await kreq('/api/unlock', pe, { pin: '482913' })).status, 429);
+Date.now = () => realNow() + 16 * 60000;
+assert.equal((await kreq('/api/unlock', pe, { pin: '482913' })).status, 200);
+Date.now = realNow;
 assert.equal((await worker.fetch(new Request('https://wall.example.com/api/chores'), locked)).status, 403);
 // the dev bypass only works on localhost: set in production by mistake, it still fails closed
 assert.equal((await worker.fetch(new Request('https://wall.example.com/api/week'), env)).status, 403);

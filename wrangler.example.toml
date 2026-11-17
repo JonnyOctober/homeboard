@@ -76,3 +76,4 @@ ACCESS_TEAM_DOMAIN = "your-team.cloudflareaccess.com"
 ACCESS_AUD = "REPLACE_WITH_APPLICATION_AUDIENCE_TAG"
 
 # Secrets (npx wrangler secret put NAME): GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, KIOSK_KEY
+# Optional secret PARENT_PIN (4-12 digits): unlocks chore management on the wall for 5 minutes.
